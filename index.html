@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Silent Depths — U-Boot-Simulation v1.0</title>
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <!-- Periskop-Overlay -->
+  <div id="periscope-overlay" class="hidden">
+    <div class="peri-vignette"></div>
+    <div class="peri-cross-h"></div>
+    <div class="peri-cross-v"></div>
+    <div class="peri-reticle-top">— 10 —|— 5 —|— 0 —|— 5 —|— 10 —</div>
+    <div class="peri-data"><span id="peri-bearing">000°</span> · <span id="peri-range">— m</span> · <span id="peri-head">▼ 12 m</span></div>
+    <div class="peri-water" id="peri-water"></div>
+  </div>
+
+  <!-- Top-Bar -->
+  <header id="topbar">
+    <div class="brand">SILENT DEPTHS <span>v1.0 · Typ VII · <span id="hud-boat">U-552</span></span></div>
+    <div class="top-group">
+      <span id="hud-date" title="Datum/Uhrzeit">01.09.1939 · 08:00</span>
+      <span id="hud-weather" title="Wetter">🌊 2 · ☁ klar · ☀ Tag</span>
+    </div>
+    <div class="top-group">
+      <label>ZEITRAFFER</label>
+      <div id="time-btns">
+        <button data-tc="1" class="tc active">1</button><button data-tc="4" class="tc">4</button><button data-tc="16" class="tc">16</button><button data-tc="64" class="tc">64</button><button data-tc="256" class="tc">256</button><button data-tc="1024" class="tc">1024</button>
+      </div>
+      <span id="tc-auto" class="hidden" title="Automatisch reduziert">⚠ KONTAKT</span>
+    </div>
+    <div class="top-group">
+      <button id="btn-cam" title="Kamera wechseln [C]">🎥 EXT</button>
+      <button id="btn-help" title="Hilfe / Anleitung [H]">?</button>
+      <button id="btn-mute" title="Ton an/aus [M]">🔊</button>
+    </div>
+  </header>
+
+  <!-- Linke Instrumente -->
+  <aside id="instruments">
+    <div class="inst-block">
+      <h3>TIEFE <span id="depth-warn" class="ok">●</span></h3>
+      <canvas id="gauge-depth" width="150" height="150"></canvas>
+      <div class="inst-row"><span id="hud-depth">0.0 m</span><span id="hud-trim">Trim 0°</span></div>
+      <div class="btn-grid" id="depth-btns">
+        <button data-depth="0">Auftauchen</button>
+        <button data-depth="7.5">Schnorchel</button>
+        <button data-depth="12">Periskop</button>
+        <button data-depth="25">25 m</button>
+        <button data-depth="60">60 m</button>
+        <button data-depth="120">120 m</button>
+        <button data-depth="200">Tieftauch</button>
+      </div>
+      <div class="inst-row"><label>Tiefenruder</label><input id="planes" type="range" min="-30" max="30" value="0" step="1"></div>
+    </div>
+    <div class="inst-block">
+      <h3>MASCHINE</h3>
+      <div class="inst-row big"><span id="hud-knots">0.0 kn</span><span id="hud-prop">⚙ Diesel</span></div>
+      <div class="btn-grid" id="telegraph">
+        <button data-tel="stop">Stop</button>
+        <button data-tel="slow">Langsam</button>
+        <button data-tel="half">Halb</button>
+        <button data-tel="full">Voll</button>
+        <button data-tel="flank">Äußerst</button>
+        <button data-tel="reverse">Zurück</button>
+      </div>
+      <div class="inst-row"><label>Antrieb</label><button id="btn-engine">Diesel ↔ E-Maschine</button></div>
+      <div class="inst-row"><button id="btn-silent" title="Alle Systeme aus, 2 kn [S]">🤫 SILENT RUNNING</button></div>
+    </div>
+    <div class="inst-block">
+      <h3>KURS</h3>
+      <canvas id="gauge-compass" width="150" height="90"></canvas>
+      <div class="inst-row"><span id="hud-heading">000°</span><span id="hud-rudder">Ruder 0°</span></div>
+      <div class="inst-row"><label>Ruder</label><input id="rudder" type="range" min="-35" max="35" value="0" step="1"></div>
+      <div class="inst-row">
+        <button id="turn-port">◀ 10°</button><button id="turn-stbd">10° ▶</button>
+      </div>
+    </div>
+    <div class="inst-block">
+      <h3>BOOT</h3>
+      <div id="hull-bar" title="Druckkörper-Integrität"><div id="hull-fill"></div><span id="hull-label">DRUCKKÖRPER</span></div>
+      <div class="inst-row"><span>O₂ <b id="hud-o2">100%</b></span><span>CO₂ <b id="hud-co2">0.0%</b></span></div>
+      <div class="inst-row"><span>Batterie <b id="hud-batt">100%</b></span><span>Diesel <b id="hud-fuel">100%</b></span></div>
+    </div>
+  </aside>
+
+  <!-- Rechte Tabs -->
+  <aside id="panel">
+    <nav id="tabs">
+      <button data-tab="periscope" class="active">Periskop</button>
+      <button data-tab="sonar">Sonar</button>
+      <button data-tab="map">Karte</button>
+      <button data-tab="tdc">TDC</button>
+      <button data-tab="weapons">Waffen</button>
+      <button data-tab="damage">Schaden</button>
+      <button data-tab="crew">Crew</button>
+      <button data-tab="career">Karriere</button>
+    </nav>
+    <section id="tab-periscope" class="tab active">
+      <h3>PERISKOP / UZO</h3>
+      <div class="inst-row"><button id="btn-peri-up">Periskop hoch [P]</button><button id="btn-uzo">UZO (Brücke) [U]</button></div>
+      <div class="inst-row"><span>Peilung <b id="scope-bearing">000°</b></span><span>Entfernung <b id="scope-range">—</b></span></div>
+      <div class="inst-row"><span>Zielkurs <b id="scope-acourse">—</b></span><span>Zieltempo <b id="scope-aspeed">—</b></span></div>
+      <div class="inst-row"><button id="btn-lock">Ziel aufschalten [L]</button><button id="btn-stadi">Stadimeter-Messung [R]</button></div>
+      <p class="hint">Periskop nur ≤ 14 m Tiefe. Über Wasser: UZO für Nachtangriffe. [Q]/[E] drehen, [R] misst Entfernung zum aufgeschalteten Ziel.</p>
+    </section>
+    <section id="tab-sonar" class="tab">
+      <h3>HYDROPHON / SONAR / RADAR</h3>
+      <canvas id="sonar-display" width="300" height="150"></canvas>
+      <div class="inst-row"><button id="btn-ping" title="Verrät eigene Position! [G]">📡 AKTIV-PING</button><button id="btn-radar">📻 RADAR</button></div>
+      <div class="inst-row"><span>Hydrophon-Lager <b id="hydro-manual">000°</b></span><input id="hydro-dial" type="range" min="0" max="359" value="0"></div>
+      <div id="contact-list"></div>
+    </section>
+    <section id="tab-map" class="tab">
+      <h3>OPERATIONSKARTE — ATLANTIK</h3>
+      <canvas id="map-display" width="300" height="260"></canvas>
+      <div class="inst-row"><span>Patrouillenquadrat <b id="map-grid">AM-12</b></span><span>Versenkungen <b id="map-kills">0</b></span></div>
+      <p class="hint">Grün: Häfen · Gelb: Konvoirouten · Rot: Kontakte · Weiß: eigenes Boot. Zeitraffer stoppt automatisch bei Kontakt &lt; 15 km und Küstennähe.</p>
+    </section>
+    <section id="tab-tdc" class="tab">
+      <h3>TORPEDO-DATEN-RECHNER (TDC)</h3>
+      <div class="tdc-grid">
+        <label>Zielpeilung <input id="tdc-bearing" type="number" value="0" min="0" max="359">°</label>
+        <label>Entfernung <input id="tdc-range" type="number" value="1000" min="100" max="12000" step="50"> m</label>
+        <label>Gegnerkurs <input id="tdc-course" type="number" value="90" min="0" max="359">°</label>
+        <label>Gegnertempo <input id="tdc-speed" type="number" value="8" min="0" max="30"> kn</label>
+        <label>Torpedotempo <select id="tdc-torp-speed"><option value="30">30 kn (lang)</option><option value="40" selected>40 kn (mittel)</option><option value="44">44 kn (kurz)</option></select></label>
+        <label><input id="tdc-auto" type="checkbox" checked> Automatische Lösung</label>
+      </div>
+      <div class="inst-row"><span>Vorhalt <b id="tdc-lead">0.0°</b></span><span>Torpedokurs <b id="tdc-course-out">000°</b></span></div>
+      <div class="inst-row"><span>Laufzeit <b id="tdc-timing">—</b></span><span>Trefferchance <b id="tdc-quality">—</b></span></div>
+      <div class="inst-row"><button id="btn-tdc-fill">Aus Periskop übernehmen</button></div>
+    </section>
+    <section id="tab-weapons" class="tab">
+      <h3>TORPEDOROHRE · GESCHÜTZ · FLAK</h3>
+      <div id="tubes"></div>
+      <div class="tdc-grid">
+        <label>Lauftiefe <input id="torp-depth" type="number" value="3" min="1" max="20"> m</label>
+        <label>Zünder <select id="torp-fuze"><option value="impact">Aufschlag (AZ)</option><option value="magnetic">Magnet (MZ)</option></select></label>
+      </div>
+      <div class="inst-row"><button id="btn-fire">🔥 LOS! Rohr <span id="fire-tube">I</span> [F]</button></div>
+      <hr>
+      <div class="inst-row"><span>Deckgeschütz <b id="deck-ammo">100</b> Schuss</span><button id="btn-deck">Feuer [B]</button></div>
+      <div class="inst-row"><span>Flak <b id="flak-ammo">200</b> Schuss</span><button id="btn-flak">Feuer [V]</button></div>
+      <div class="inst-row"><span>Torpedos Reserve <b id="torp-reserve">8</b></span></div>
+    </section>
+    <section id="tab-damage" class="tab">
+      <h3>SCHADEN & REPARATUR</h3>
+      <div id="damage-list"></div>
+      <div class="inst-row"><span>Leckage <b id="dmg-flood">0%</b></span><span>Pumpen <button id="btn-pump">an/aus</button></span></div>
+      <p class="hint">Reparaturdauer hängt von LI-Erfahrung, Moral und Silent Running ab. Schwere Lecks nur an der Oberfläche beherrschbar.</p>
+    </section>
+    <section id="tab-crew" class="tab">
+      <h3>BESATZUNG</h3>
+      <div id="crew-list"></div>
+      <div class="inst-row"><button id="btn-rest">Wache wechseln (Fatigue ↓)</button></div>
+    </section>
+    <section id="tab-career" class="tab">
+      <h3>KARRIERE 1939–1945</h3>
+      <div class="inst-row"><span>Dienstgrad <b id="car-rank">Oberleutnant z.S.</b></span><span>Tonnage <b id="car-tonnage">0 BRT</b></span></div>
+      <div class="inst-row"><span>Orden <b id="car-medals">—</b></span><span>Boot <b id="car-boat">Typ VIIB</b></span></div>
+      <div id="event-log"></div>
+      <div class="inst-row"><button id="btn-next-patrol">Nächste Patrouille</button><button id="btn-refit">Ausrüstung (Bootstyp)</button></div>
+    </section>
+  </aside>
+
+  <!-- Log -->
+  <div id="log"></div>
+
+  <!-- Hilfe -->
+  <div id="help" class="hidden">
+    <div class="help-card">
+      <h2>ERSTE PATROUILLE — Kurzanleitung</h2>
+      <ol>
+        <li><b>W/S</b> Tiefe · <b>A/D</b> Ruder · <b>1–6</b> Telegraph · <b>C</b> Kamera · <b>P</b> Periskop · <b>F</b> Feuer</li>
+        <li>Auftauchen [Auftauchen-Button], Diesel, Kurs auf Konvoiroute (Karte, gelb). Zeitraffer 256.</li>
+        <li>Bei Kontakt (⚠): Zeitraffer stoppt. Auf Periskoptiefe (12 m), Hydrophon peilen, Ziel aufschalten [L].</li>
+        <li>TDC prüfen (Auto-Lösung an), Rohr wählen, Tiefe 3 m, <b>F</b> Feuer. Laufzeit abwarten.</li>
+        <li>Zerstörer? → 120 m, Silent Running [S], Schleichfahrt. O₂/CO₂ beachten — rechtzeitig schnorcheln!</li>
+      </ol>
+      <button id="btn-help-close">Schließen [H]</button>
+    </div>
+  </div>
+
+  <div id="boot" class="hidden">TAUCHE…</div>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+:root{
+  --sonar:#39ff6a; --amber:#ffb347; --red:#ff4d4d; --panel:rgba(6,14,10,.88);
+  --line:rgba(57,255,106,.25); --txt:#cfe8d4; --dim:#7fa88c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#010604;color:var(--txt);font-family:"Consolas","Menlo",monospace;overflow:hidden;font-size:13px}
+#app{position:fixed;inset:0}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hidden{display:none!important}
+/* Topbar */
+#topbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 10px;background:var(--panel);border-bottom:1px solid var(--line);z-index:10;flex-wrap:wrap}
+.brand{color:var(--sonar);font-weight:bold;letter-spacing:2px}
+.brand span{color:var(--dim);font-weight:normal;letter-spacing:0}
+.top-group{display:flex;align-items:center;gap:8px}
+.top-group label{color:var(--dim);font-size:11px}
+#time-btns button,.top-group button{background:#04140b;border:1px solid var(--line);color:var(--txt);padding:3px 8px;cursor:pointer;font:inherit}
+#time-btns button.active,#tabs button.active{background:#0c3a1e;color:var(--sonar);border-color:var(--sonar)}
+button{font:inherit;background:#04140b;border:1px solid var(--line);color:var(--txt);padding:4px 8px;cursor:pointer;border-radius:2px}
+button:hover{border-color:var(--sonar);color:#fff}
+button:disabled{opacity:.35;cursor:default}
+#tc-auto{color:var(--red);font-weight:bold;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+/* Side panels */
+#instruments{position:absolute;left:0;top:52px;bottom:0;width:196px;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:8px;z-index:9}
+#panel{position:absolute;right:0;top:52px;bottom:0;width:332px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;z-index:9}
+#tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+#tabs button{flex:1 1 25%;border:none;border-right:1px solid var(--line);border-radius:0;padding:6px 2px;font-size:11px}
+.tab{display:none;padding:10px;overflow-y:auto;flex:1}
+.tab.active{display:block}
+.inst-block{border:1px solid var(--line);margin-bottom:8px;padding:6px}
+.inst-block h3{margin:0 0 6px;font-size:12px;color:var(--sonar);letter-spacing:1px;display:flex;justify-content:space-between}
+.inst-row{display:flex;justify-content:space-between;align-items:center;gap:6px;margin:5px 0;flex-wrap:wrap}
+.inst-row.big{font-size:16px}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:6px 0}
+.btn-grid button{font-size:11px;padding:4px 2px}
+.btn-grid button.sel{background:#0c3a1e;color:var(--sonar);border-color:var(--sonar)}
+#depth-warn.ok{color:var(--sonar)} #depth-warn.warn{color:var(--amber)} #depth-warn.danger{color:var(--red)}
+input[type=range]{width:100%}
+#hull-bar{position:relative;height:22px;background:#200;border:1px solid var(--line);margin:4px 0}
+#hull-fill{height:100%;width:100%;background:linear-gradient(90deg,#0f0,#3f6)}
+#hull-label{position:absolute;inset:0;text-align:center;line-height:22px;font-size:11px;color:#fff;text-shadow:0 0 4px #000}
+/* Periscope overlay */
+#periscope-overlay{position:absolute;inset:52px 332px 0 196px;pointer-events:none;z-index:5}
+.peri-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 42%,rgba(0,0,0,.97) 72%)}
+.peri-cross-h{position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(57,255,106,.7)}
+.peri-cross-v{position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(57,255,106,.7)}
+.peri-reticle-top{position:absolute;top:38%;width:100%;text-align:center;color:var(--sonar);opacity:.8}
+.peri-data{position:absolute;bottom:12px;width:100%;text-align:center;color:var(--sonar);font-size:15px;text-shadow:0 0 6px #000}
+.peri-water{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(120,180,255,.25),transparent 40%);opacity:0}
+/* Log */
+#log{position:absolute;left:206px;right:342px;bottom:8px;max-height:132px;overflow:hidden;display:flex;flex-direction:column-reverse;gap:2px;z-index:8;pointer-events:none}
+#log div{background:rgba(2,10,6,.8);border-left:2px solid var(--sonar);padding:2px 8px;font-size:12px}
+#log div.warn{border-color:var(--amber)} #log div.alarm{border-color:var(--red);color:#ffd7d7}
+/* Sonar & map */
+#sonar-display,#map-display,#gauge-depth,#gauge-compass{width:100%;background:#020a06;border:1px solid var(--line)}
+#contact-list{max-height:150px;overflow-y:auto;margin-top:6px}
+.contact{border:1px solid var(--line);padding:4px 6px;margin:3px 0;font-size:12px;cursor:pointer}
+.contact:hover{border-color:var(--sonar)}
+.contact.warship{border-color:var(--red)}
+.tdc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0}
+.tdc-grid input,.tdc-grid select{width:80px;background:#04140b;color:var(--txt);border:1px solid var(--line);font:inherit;padding:2px 4px}
+.hint{color:var(--dim);font-size:11px}
+#tubes .tube{border:1px solid var(--line);padding:4px 6px;margin:3px 0;display:flex;justify-content:space-between;cursor:pointer;font-size:12px}
+#tubes .tube.sel{border-color:var(--sonar);background:#0c3a1e}
+#tubes .tube.reloading{opacity:.55}
+#damage-list .dmg,#crew-list .crew{border:1px solid var(--line);padding:4px 6px;margin:3px 0;font-size:12px}
+.bar{height:6px;background:#300;margin-top:3px;position:relative}
+.bar>i{position:absolute;inset:0;background:var(--sonar)}
+#event-log{max-height:130px;overflow-y:auto;font-size:11px;color:var(--dim)}
+/* Help */
+#help{position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:50;display:flex;align-items:center;justify-content:center}
+.help-card{background:#04140b;border:1px solid var(--sonar);padding:20px;max-width:560px}
+.help-card li{margin:6px 0}
+#boot{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#010604;color:var(--sonar);font-size:22px;letter-spacing:4px;z-index:100}
+@media (max-width:1100px){#instruments{width:160px}#panel{width:280px}#periscope-overlay{left:160px;right:280px}#log{left:170px;right:290px}}
